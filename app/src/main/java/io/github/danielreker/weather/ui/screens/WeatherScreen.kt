@@ -3,9 +3,7 @@ package io.github.danielreker.weather.ui.screens
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,8 +11,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,14 +24,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.danielreker.weather.R
-import io.github.danielreker.weather.data.datasources.CityProvider
 import io.github.danielreker.weather.models.WeatherCondition
 import io.github.danielreker.weather.ui.theme.WeatherTheme
 import io.github.danielreker.weather.ui.viewmodels.HourlyWeatherUiState
@@ -49,15 +43,15 @@ import kotlinx.datetime.offsetIn
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel = hiltViewModel(),
+    weatherViewModel: WeatherViewModel = hiltViewModel(),
+    cityViewModel: CityViewModel = hiltViewModel(),
 ) {
-    val cityProvider = CityProvider()
-    val cities = cityProvider.getCities()
-    val cityWeatherMap by viewModel.uiState.collectAsState()
+    val cityWeatherMap by weatherViewModel.uiState.collectAsState()
+    val cities = cityViewModel.uiState.collectAsState().value.cities
     val pagerState = rememberPagerState(pageCount = {cities.size})
 
-    LaunchedEffect(Unit) {
-        viewModel.loadWeatherForCities(cities)
+    LaunchedEffect(cities.size) {
+        weatherViewModel.loadWeatherForCities(cities)
     }
 
     WeatherTheme {
@@ -65,18 +59,31 @@ fun WeatherScreen(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text(cities[pagerState.currentPage].name) }
+                    title = { if (cities.isNotEmpty()) Text(cities[pagerState.currentPage].name) }
                 )
             }
         ) { innerPadding ->
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-            ) { pageIndex ->
-                val city = cities[pageIndex]
-                val cityState = cityWeatherMap[city]
+            if (cities.isNotEmpty()) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                ) { pageIndex ->
+                    var cityState: WeatherUiState? = null
+                    if (!cities.isEmpty()) {
+                        val city = cities[pageIndex]
+                        cityState = cityWeatherMap[city]
+                    }
 
-                WeatherCard(cityState)
+                    WeatherCard(cityState)
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.width(128.dp).height(128.dp))
+                }
             }
         }
     }

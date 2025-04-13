@@ -21,12 +21,12 @@ data class HourlyWeatherUiState(
 data class WeatherUiState(
     val isLoading: Boolean = false,
     val forecast: List<HourlyWeatherUiState> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<Map<City, WeatherUiState>>(emptyMap())
     val uiState = _uiState.asStateFlow()

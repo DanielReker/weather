@@ -4,8 +4,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.github.danielreker.weather.data.apis.ApiNinjasCityApi
 import io.github.danielreker.weather.data.apis.OpenMeteoApi
+import io.github.danielreker.weather.data.datasources.RemoteCityDataSource
 import io.github.danielreker.weather.data.datasources.RemoteWeatherDataSource
+import io.github.danielreker.weather.data.repositories.CityRepository
+import io.github.danielreker.weather.data.repositories.CityRepositoryImpl
 import io.github.danielreker.weather.data.repositories.WeatherRepository
 import io.github.danielreker.weather.data.repositories.WeatherRepositoryImpl
 import retrofit2.Retrofit
@@ -29,6 +33,24 @@ object WeatherModule {
     ): WeatherRepository {
         return WeatherRepositoryImpl(
             dataSource = RemoteWeatherDataSource(api),
+        )
+    }
+
+    @Provides
+    fun provideApiNinjasCityApi(): ApiNinjasCityApi {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.API_NINJAS_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiNinjasCityApi::class.java)
+    }
+
+    @Provides
+    fun provideCityRepository(
+        api: ApiNinjasCityApi
+    ): CityRepository {
+        return CityRepositoryImpl(
+            dataSource = RemoteCityDataSource(api),
         )
     }
 }

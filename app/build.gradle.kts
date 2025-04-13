@@ -20,6 +20,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "OPEN_METEO_API_BASE_URL", "\"https://api.open-meteo.com/\"")
+        buildConfigField("String", "API_NINJAS_BASE_URL", "\"https://api.api-ninjas.com/\"")
     }
 
     buildTypes {
